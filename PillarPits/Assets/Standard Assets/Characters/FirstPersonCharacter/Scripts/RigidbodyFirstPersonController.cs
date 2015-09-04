@@ -4,6 +4,7 @@ using System.Collections;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityEngine.UI;
 
+
 namespace UnityStandardAssets.Characters.FirstPerson
 {
     [RequireComponent(typeof (Rigidbody))]
@@ -11,6 +12,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
     public class RigidbodyFirstPersonController : MonoBehaviour
     {
 		[Header("Jet Packing Variables")]
+		[SerializeField] private Image Fuel;
+		[SerializeField] private float JetPackForce;
 		[SerializeField] private float ReduceRate;
 		[SerializeField] private float RefuelRate;
 		[SerializeField] private float CooldownRate;
@@ -139,6 +142,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         private void Update()
         {
+			if(Input.GetKey(KeyCode.Q))
+			{
+				TotalFuel = 100;
+				Fuel.fillAmount = TotalFuel / 100;	
+			}
+
             RotateView();
 
             if (CrossPlatformInputManager.GetButton("Jump") && !m_Jump)
@@ -148,24 +157,33 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			if(CrossPlatformInputManager.GetButtonDown("Fire3") && !JetPacking)
 			{
-				JetPacking = true;
-				Refuel = false;
+				if(TotalFuel > 0)
+				{
+					JetPacking = true;
+					Refuel = false;
+				}
+
 			}
 
 			if(CrossPlatformInputManager.GetButtonUp("Fire3") && JetPacking)
 			{
 				JetPacking = false;
 				StartCoroutine(StartCoolDown());
-				Debug.Log("A");
+
+			}
+
+			if(TotalFuel == 0)
+			{
+				JetPacking = false;
+				StartCoroutine(StartCoolDown());
 			}
 
 			if(Refuel)
 			{
 				if(TotalFuel < 100)
 				{
-					Debug.Log("B");
 					TotalFuel += RefuelRate;
-					FuelText.text = TotalFuel.ToString("F0");
+					Fuel.fillAmount = TotalFuel / 100;
 				}
 			}
         }
@@ -174,8 +192,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		{
 			yield return new WaitForSeconds(CooldownRate);
 			Refuel = true;
-
-
 		}
 
         private void FixedUpdate()
@@ -205,8 +221,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if (m_IsGrounded)
             {
-				JetPacking = false;
-
                 m_RigidBody.drag = 5f;
 
                 if (m_Jump)
@@ -215,6 +229,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     m_RigidBody.velocity = new Vector3(m_RigidBody.velocity.x, 0f, m_RigidBody.velocity.z);
                     m_RigidBody.AddForce(new Vector3(0f, movementSettings.JumpForce, 0f), ForceMode.Impulse);
                     m_Jumping = true;
+					Debug.Log("B");
                 }
 
                 if (!m_Jumping && Mathf.Abs(input.x) < float.Epsilon && Mathf.Abs(input.y) < float.Epsilon && m_RigidBody.velocity.magnitude < 1f)
@@ -235,10 +250,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					if(TotalFuel > 0)
 					{
 						m_RigidBody.drag = 0f;
-						m_RigidBody.velocity = new Vector3(m_RigidBody.velocity.x, 0f, m_RigidBody.velocity.z);
-						m_RigidBody.AddForce(new Vector3(0f, movementSettings.JumpForce, 0f), ForceMode.Impulse);
+						m_RigidBody.velocity = new Vector3(m_RigidBody.velocity.x / 2, 0f, m_RigidBody.velocity.z / 2);
+						m_RigidBody.AddForce(new Vector3(0f, JetPackForce, 0f), ForceMode.Impulse);
 						TotalFuel -= ReduceRate;
-						FuelText.text = TotalFuel.ToString("F0");
+						Fuel.fillAmount = TotalFuel / 100;					
 					}
 
 
