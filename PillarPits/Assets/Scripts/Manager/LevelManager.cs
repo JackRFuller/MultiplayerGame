@@ -5,23 +5,41 @@ using UnityEngine.UI;
 
 public class LevelManager : MonoBehaviour {
 
+    public enum GameState
+    {
+        In_Game,
+        End_Game,
+    }
+
+    public GameState CurrentGameState;
+
+    [SerializeField] private RigidbodyFirstPersonController RFPC_Script;
+
 	[Header("Universal Level Attributes")]
 	[SerializeField] private PC_Shoot PCS_Script;
 	[SerializeField] GameObject PC;
 	private Vector3 StartingPosition;
-	private Vector3 StartingRotation;
+	private Quaternion StartingRotation;
 	[SerializeField] Rigidbody PC_RB;
 	public int CurrentLevelID;
 	[SerializeField] private float LevelTimer;
 	[SerializeField] private bool LevelStarted;
 	[SerializeField] private int TargetCount = 0;
 
-	[Header("UI Items")]
+	[Header("In Game UI Items")]
+    [SerializeField] private GameObject In_GameUI;   
 	[SerializeField] private Text Timer;
 	[SerializeField] private Text NumofTargets;
 	[SerializeField] private Text BestTimeText;
 
-	[System.Serializable]
+    [Header("End Game UI Items")]
+    [SerializeField] private GameObject End_GameUI;
+    [SerializeField] private Text EndLevelTime;
+    [SerializeField] private Text EndLevelMessage;
+    [SerializeField] private string[] EndLevelStrings;
+    private bool NewTime;
+
+    [System.Serializable]
 	public class SpecificLevelData
 	{
 		public GameObject LevelLayout;
@@ -32,10 +50,7 @@ public class LevelManager : MonoBehaviour {
 		public int AmmoAvailable;
 		public bool EndingPointAvailable;
 		public GameObject EndingPoint;
-		public float[] StarTimes;
-
-		public PlayerPrefs BestTime;
-		public PlayerPrefs TimesAttempted;
+		public float[] StarTimes;		
 	}
 
 	public SpecificLevelData[] Levels;
@@ -43,6 +58,7 @@ public class LevelManager : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
+        
 		InitialiseLevelData();
 	
 	}
@@ -50,15 +66,23 @@ public class LevelManager : MonoBehaviour {
 	void InitialiseLevelData()
 	{
 		StartingPosition = PC.transform.position;
+        StartingRotation = PC.transform.rotation;
 
-		Instantiate(Levels[CurrentLevelID].LevelLayout, Vector3.zero, transform.rotation);
+        Instantiate(Levels[CurrentLevelID].LevelLayout, Vector3.zero, transform.rotation);
 		NumofTargets.text = Levels[CurrentLevelID].NumOfTargets.ToString();
 		Levels[CurrentLevelID].CurrentTargetsLeft = Levels[CurrentLevelID].NumOfTargets;
 
 		System.Array.Clear(Levels[CurrentLevelID].Targets,0,Levels[CurrentLevelID].Targets.Length);
 		Levels[CurrentLevelID].Targets = GameObject.FindGameObjectsWithTag("Target");
 
-
+        if(PlayerPrefs.GetInt("TimesAttempted"+CurrentLevelID) == 0)
+        {
+            BestTimeText.text = "-- --";
+        }
+        else
+        {
+            BestTimeText.text = PlayerPrefs.GetFloat("BestTime" + CurrentLevelID).ToString("F2");
+        }
 		 
 	}
 	
@@ -70,20 +94,25 @@ public class LevelManager : MonoBehaviour {
 			RunTimer();
 		}
 
-		if(Input.GetKey(KeyCode.Q))
+		if((Input.GetKeyUp(KeyCode.Q) || Input.GetButtonUp("Back")))
 		{
 			Reset();
 		}
 	
 	}
 
-	void Reset()
+	public void Reset()
 	{
 		//Player Reset
 		PC.transform.position = StartingPosition;
+        PC.transform.rotation = StartingRotation;
 		PC_RB.velocity = Vector3.zero;
 		PC_RB.constraints = RigidbodyConstraints.None;
 		PCS_Script.SetAmmo();
+        RFPC_Script.inControl = true;
+
+        //JetPack
+        RFPC_Script.ResetFuel();
 
 		//LevelReset
 		LevelStarted = false;
@@ -97,6 +126,12 @@ public class LevelManager : MonoBehaviour {
 			Target.SetActive(true);
 		}
 
+        if(CurrentGameState == GameState.End_Game)
+        {
+            SwitchUI();
+        }
+
+       
 		ResetUI();
 	}
 
@@ -128,8 +163,11 @@ public class LevelManager : MonoBehaviour {
 
 	void EndLevel()
 	{
+        CurrentGameState = GameState.In_Game;
+
 		PC_RB.velocity = Vector3.zero;
 		PC_RB.constraints = RigidbodyConstraints.FreezeAll;
+        RFPC_Script.inControl = false;
 
 		if(PlayerPrefs.GetFloat("BestTime"+CurrentLevelID.ToString()) == 0)
 		{
@@ -137,15 +175,66 @@ public class LevelManager : MonoBehaviour {
 			BestTimeText.text = PlayerPrefs.GetFloat("BestTime"+CurrentLevelID.ToString()).ToString();
 		}
 
-		if(LevelTimer < PlayerPrefs.GetFloat("BestTime"+CurrentLevelID.ToString()))
-		{
+        if (PlayerPrefs.GetInt("TimesAttempted" + CurrentLevelID) == 0)
+        {
+            PlayerPrefs.SetFloat("BestTime" + CurrentLevelID, LevelTimer);
+            BestTimeText.text = PlayerPrefs.GetFloat("BestTime" + CurrentLevelID).ToString("F2");
+            NewTime = true;
+        }
+        else
+        {
+            if(LevelTimer < PlayerPrefs.GetFloat("BestTime" + CurrentLevelID))
+            {
+                PlayerPrefs.SetFloat("BestTime" + CurrentLevelID, LevelTimer);
+                BestTimeText.text = PlayerPrefs.GetFloat("BestTime" + CurrentLevelID).ToString("F2");
+                NewTime = true;
+            }
+        }
 
-		}
-	}
+        PlayerPrefs.SetInt("TimesAttempted" + CurrentLevelID, PlayerPrefs.GetInt("TimesAttempted" + CurrentLevelID) + 1);
 
-	public void LevelStart()
+        //UI
+        SwitchUI();     
+
+    }
+
+    void SwitchUI()
+    {
+        switch (CurrentGameState)
+        {
+            case (GameState.In_Game):
+                In_GameUI.SetActive(false);
+                End_GameUI.SetActive(true);
+                DetermineUI();
+                CurrentGameState = GameState.End_Game;
+                break;
+            case (GameState.End_Game):
+                In_GameUI.SetActive(true);
+                End_GameUI.SetActive(false);
+                CurrentGameState = GameState.In_Game;
+                break;
+        }
+    }
+
+    void DetermineUI()
+    {
+        EndLevelTime.text = LevelTimer.ToString("F2");
+        if (NewTime)
+        {
+            EndLevelMessage.text = EndLevelStrings[1];
+        }
+        else
+        {
+            EndLevelMessage.text = EndLevelStrings[0];
+        }
+
+        NewTime = false;
+    }
+
+    public void LevelStart()
 	{
 		LevelStarted = true;
+        CurrentGameState = GameState.In_Game;
 	}
 
 

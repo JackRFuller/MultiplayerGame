@@ -48,7 +48,7 @@ public class PC_Shoot : MonoBehaviour {
 	void Update () {
 
 		//Reload
-		if(Input.GetKey("r"))
+		if((Input.GetKey("r") || Input.GetButtonUp("RB")))
 		{
 			if(!Reloading)
 			{
@@ -61,7 +61,7 @@ public class PC_Shoot : MonoBehaviour {
 		RaycastHit hit;
 
 		//Shoot
-		if(Input.GetMouseButtonDown(0))
+		if((Input.GetMouseButtonDown(0) || Input.GetAxis("RightTrigger") > 0))
 		{		
 			if(CheckShoot())
 			{

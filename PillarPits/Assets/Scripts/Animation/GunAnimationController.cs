@@ -3,6 +3,8 @@ using System.Collections;
 
 public class GunAnimationController : MonoBehaviour {
 
+    
+
 	[SerializeField] private Animator GunAnimator;
 
 	// Use this for initialization
@@ -20,7 +22,7 @@ public class GunAnimationController : MonoBehaviour {
 		GunAnimator.SetBool("Shoot", true);
 		GunAnimator.SetBool("Idle", false);
 
-		StartCoroutine(Cooldown(0.5F));
+		StartCoroutine(Cooldown(0.25F));
 	}
 
 	public void Reload()
