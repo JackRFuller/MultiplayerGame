@@ -58,13 +58,13 @@ public class LevelManager : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
-        
-		InitialiseLevelData();
 	
 	}
 
-	void InitialiseLevelData()
+	public void InitialiseLevelData(int LevelToLoadIn)
 	{
+		CurrentLevelID = LevelToLoadIn;
+
 		StartingPosition = PC.transform.position;
         StartingRotation = PC.transform.rotation;
 

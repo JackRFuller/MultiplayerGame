@@ -9,7 +9,14 @@ public class GameManager : MonoBehaviour {
         MouseAndKeyboard,
     }
 
+	public enum GameState
+	{
+		Menu,
+		Gameplay,
+	}
+
     public ControlState CurrentControlState;
+	public GameState CurrentGameState;
 
 	// Use this for initialization
 	void Start () {
