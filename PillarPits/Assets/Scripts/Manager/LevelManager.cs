@@ -21,12 +21,14 @@ public class LevelManager : MonoBehaviour {
 	private Vector3 StartingPosition;
 	private Quaternion StartingRotation;
 	[SerializeField] Rigidbody PC_RB;
+    private GameObject LevelLayout;
 	public int CurrentLevelID;
 	[SerializeField] private float LevelTimer;
 	[SerializeField] private bool LevelStarted;
 	[SerializeField] private int TargetCount = 0;
 
 	[Header("In Game UI Items")]
+    [SerializeField] private MenuManager MM_Script;
     [SerializeField] private GameObject In_GameUI;   
 	[SerializeField] private Text Timer;
 	[SerializeField] private Text NumofTargets;
@@ -37,6 +39,9 @@ public class LevelManager : MonoBehaviour {
     [SerializeField] private Text EndLevelTime;
     [SerializeField] private Text EndLevelMessage;
     [SerializeField] private string[] EndLevelStrings;
+    [SerializeField] private Text NextLevelText;
+    private bool NextLevelAvailable;
+    private bool NewLevel = true;
     private bool NewTime;
 
     [System.Serializable]
@@ -62,20 +67,17 @@ public class LevelManager : MonoBehaviour {
 	}
 
 	public void InitialiseLevelData(int LevelToLoadIn)
-	{
-		CurrentLevelID = LevelToLoadIn;
+	{        
+        CurrentLevelID = LevelToLoadIn;       
 
-		StartingPosition = PC.transform.position;
-        StartingRotation = PC.transform.rotation;
+        LevelLayout = Instantiate(Levels[CurrentLevelID].LevelLayout, Vector3.zero, transform.rotation) as GameObject;
+        NumofTargets.text = Levels[CurrentLevelID].NumOfTargets.ToString();
+        Levels[CurrentLevelID].CurrentTargetsLeft = Levels[CurrentLevelID].NumOfTargets;
 
-        Instantiate(Levels[CurrentLevelID].LevelLayout, Vector3.zero, transform.rotation);
-		NumofTargets.text = Levels[CurrentLevelID].NumOfTargets.ToString();
-		Levels[CurrentLevelID].CurrentTargetsLeft = Levels[CurrentLevelID].NumOfTargets;
+        System.Array.Clear(Levels[CurrentLevelID].Targets, 0, Levels[CurrentLevelID].Targets.Length);
+        Levels[CurrentLevelID].Targets = GameObject.FindGameObjectsWithTag("Target");
 
-		System.Array.Clear(Levels[CurrentLevelID].Targets,0,Levels[CurrentLevelID].Targets.Length);
-		Levels[CurrentLevelID].Targets = GameObject.FindGameObjectsWithTag("Target");
-
-        if(PlayerPrefs.GetInt("TimesAttempted"+CurrentLevelID) == 0)
+        if (PlayerPrefs.GetInt("TimesAttempted" + CurrentLevelID) == 0)
         {
             BestTimeText.text = "-- --";
         }
@@ -83,8 +85,21 @@ public class LevelManager : MonoBehaviour {
         {
             BestTimeText.text = PlayerPrefs.GetFloat("BestTime" + CurrentLevelID).ToString("F2");
         }
-		 
-	}
+
+        if (NewLevel)
+        {
+            StartingPosition = PC.transform.position;
+            StartingRotation = PC.transform.rotation;
+
+            NewLevel = false;
+        }
+
+        Reset();
+
+
+
+
+    }
 	
 	// Update is called once per frame
 	void Update () {
@@ -98,8 +113,47 @@ public class LevelManager : MonoBehaviour {
 		{
 			Reset();
 		}
+
+        if(CurrentGameState == GameState.End_Game)
+        {
+            if (Input.GetKey(KeyCode.Escape))
+            {
+                ReturnToMenu();
+            }
+
+            if (Input.GetKey(KeyCode.Tab))
+            {
+                if (NextLevelAvailable)
+                {
+                    NextLevel();
+                }
+            }
+        }
 	
 	}
+
+    void NextLevel()
+    {       
+
+        //Destroys CurrentLoadLevel
+        Destroy(LevelLayout);        
+
+        CurrentLevelID++;
+
+        InitialiseLevelData(CurrentLevelID);
+    }
+
+    void ReturnToMenu()
+    {    
+        MM_Script.TurnOnMenu();
+
+        Reset();
+
+        //Destroys CurrentLoadLevel
+        Destroy(LevelLayout);
+
+       
+    }
 
 	public void Reset()
 	{
@@ -198,7 +252,7 @@ public class LevelManager : MonoBehaviour {
 
     }
 
-    void SwitchUI()
+    public void SwitchUI()
     {
         switch (CurrentGameState)
         {
@@ -226,6 +280,17 @@ public class LevelManager : MonoBehaviour {
         else
         {
             EndLevelMessage.text = EndLevelStrings[0];
+        }
+
+        if(CurrentLevelID == Levels.Length - 1)
+        {
+            NextLevelText.enabled = false;
+            NextLevelAvailable = false;
+        }
+        else
+        {
+            NextLevelText.enabled = true;
+            NextLevelAvailable = true;
         }
 
         NewTime = false;

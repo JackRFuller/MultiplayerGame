@@ -24,18 +24,23 @@ public class MenuManager : MonoBehaviour {
 
 		Cursor.visible = false;
 
-		for(int i = 0; i < TimeText.Length; i++)
-		{
-			Debug.Log(i);
-			TimeText[i].text = "Best Time: " + PlayerPrefs.GetFloat("BestTime" + i).ToString("F2");
-
-			if(PlayerPrefs.GetFloat("BestTime" + i) == 0)
-			{
-				TimeText[i].text = "Best Time: -- --"; 
-			}
-		}
+        BestTimeUpdates();
 	
 	}
+
+    void BestTimeUpdates()
+    {
+        for (int i = 0; i < TimeText.Length; i++)
+        {
+            Debug.Log(i);
+            TimeText[i].text = "Best Time: " + PlayerPrefs.GetFloat("BestTime" + i).ToString("F2");
+
+            if (PlayerPrefs.GetFloat("BestTime" + i) == 0)
+            {
+                TimeText[i].text = "Best Time: -- --";
+            }
+        }
+    }
 	
 	// Update is called once per frame
 	void Update () {
@@ -66,6 +71,24 @@ public class MenuManager : MonoBehaviour {
 		LM_Script.InitialiseLevelData(LevelID);
 	}
 
+    public void TurnOnMenu()
+    {
+        BestTimeUpdates();
+
+        MenuCanvas.SetActive(true);
+        MenuCamera.SetActive(true);
+
+        TurnOffGameplayItems();
+    }
+
+    void TurnOffGameplayItems()
+    {
+        PC.SetActive(false);
+        GameplayCanvas.SetActive(false);
+
+        GM_Script.CurrentGameState = GameManager.GameState.Menu;
+    }
+
 	void TurnOffMenu()
 	{
 		MenuCanvas.SetActive(false);
@@ -78,6 +101,8 @@ public class MenuManager : MonoBehaviour {
 	{
 		PC.SetActive(true);
 		GameplayCanvas.SetActive(true);
+        LM_Script.CurrentGameState = LevelManager.GameState.End_Game;
+        LM_Script.SwitchUI();
 	}
 
 
