@@ -9,6 +9,7 @@ public class PC_Shoot : MonoBehaviour {
 	[Header("Shooting Attributes")]
 	[SerializeField] private float ShotRange;
 	[SerializeField] private float ShootingCooldownTime;
+	[SerializeField] private LineRenderer BulletTrail;
 	private bool CanShoot = true;
 
 	[Header("Reloading Attributes")]
@@ -70,7 +71,8 @@ public class PC_Shoot : MonoBehaviour {
 
 					if(Physics.Raycast(ray, out hit, ShotRange))
 					{
-						
+						BulletTrail.enabled = true;
+						StartCoroutine(BulletTrailCoolDown());
 						if(hit.collider.tag == "Target")
 						{
 							DestroyEnemy(hit.collider.gameObject);
@@ -84,7 +86,7 @@ public class PC_Shoot : MonoBehaviour {
 
 					
 					GAC_Script.Shoot();
-					
+
 
 				}
 
@@ -103,9 +105,16 @@ public class PC_Shoot : MonoBehaviour {
 		LM_Script.AddTargetCount();
 	}
 
+	IEnumerator BulletTrailCoolDown()
+	{
+		yield return new WaitForSeconds(0.1F);
+		BulletTrail.enabled = false;
+	}
+
 	IEnumerator ShootingCooldown()
 	{
 		yield return new WaitForSeconds(ShootingCooldownTime);
+
 		CanShoot = true;
 	}
 

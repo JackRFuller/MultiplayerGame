@@ -32,7 +32,7 @@ public class MenuManager : MonoBehaviour {
     {
         for (int i = 0; i < TimeText.Length; i++)
         {
-            Debug.Log(i);
+            
             TimeText[i].text = "Best Time: " + PlayerPrefs.GetFloat("BestTime" + i).ToString("F2");
 
             if (PlayerPrefs.GetFloat("BestTime" + i) == 0)

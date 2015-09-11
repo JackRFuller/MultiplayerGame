@@ -13,6 +13,7 @@ public class RigidbodyFirstPersonController : MonoBehaviour
     public bool inControl = true;    
        
     [Header("Jet Packing Variables")]
+	[SerializeField] private CameraShake CS_Script;
 	[SerializeField] private Image Fuel;
 	[SerializeField] private float JetPackForce;
 	[SerializeField] private float ReduceRate;
@@ -155,6 +156,7 @@ public class RigidbodyFirstPersonController : MonoBehaviour
 		{
 			if(TotalFuel > 0)
 			{
+				CS_Script.isShaking = true;
 				JetPacking = true;
 				Refuel = false;
 			}
@@ -163,6 +165,7 @@ public class RigidbodyFirstPersonController : MonoBehaviour
 
 		if((CrossPlatformInputManager.GetButtonUp("Fire3") || Input.GetButtonUp("LB")) && JetPacking)
 		{
+			CS_Script.isShaking = false;
 			JetPacking = false;
 			StartCoroutine(StartCoolDown());
 
@@ -170,6 +173,7 @@ public class RigidbodyFirstPersonController : MonoBehaviour
 
 		if(TotalFuel == 0)
 		{
+			CS_Script.isShaking = false;
 			JetPacking = false;
 			StartCoroutine(StartCoolDown());
 		}
