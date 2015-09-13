@@ -12,6 +12,7 @@ public class GameManager : MonoBehaviour {
 	public enum GameState
 	{
 		Menu,
+        LevelPreview,
 		Gameplay,
 	}
 

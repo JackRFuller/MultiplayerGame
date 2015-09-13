@@ -47,6 +47,7 @@ public class LevelManager : MonoBehaviour {
     [System.Serializable]
 	public class SpecificLevelData
 	{
+        public string LevelTitle;
 		public GameObject LevelLayout;
 		public int CurrentTargetsLeft = 0;
 		public int NumOfTargets;
@@ -55,7 +56,7 @@ public class LevelManager : MonoBehaviour {
 		public int AmmoAvailable;
 		public bool EndingPointAvailable;
 		public GameObject EndingPoint;
-		public float[] StarTimes;		
+        public float[] StarTimes = new float[3];	
 	}
 
 	public SpecificLevelData[] Levels;
@@ -71,11 +72,18 @@ public class LevelManager : MonoBehaviour {
         CurrentLevelID = LevelToLoadIn;       
 
         LevelLayout = Instantiate(Levels[CurrentLevelID].LevelLayout, Vector3.zero, transform.rotation) as GameObject;
+
         NumofTargets.text = Levels[CurrentLevelID].NumOfTargets.ToString();
+
         Levels[CurrentLevelID].CurrentTargetsLeft = Levels[CurrentLevelID].NumOfTargets;
 
+        //--------
+
         System.Array.Clear(Levels[CurrentLevelID].Targets, 0, Levels[CurrentLevelID].Targets.Length);
+
         Levels[CurrentLevelID].Targets = GameObject.FindGameObjectsWithTag("Target");
+
+        ///-------
 
         if (PlayerPrefs.GetInt("TimesAttempted" + CurrentLevelID) == 0)
         {
