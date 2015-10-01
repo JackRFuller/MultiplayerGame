@@ -48,6 +48,7 @@ public class LevelManager : MonoBehaviour {
 	public class SpecificLevelData
 	{
         public string LevelTitle;
+		public string LevelDescription;
 		public GameObject LevelLayout;
 		public int CurrentTargetsLeft = 0;
 		public int NumOfTargets;

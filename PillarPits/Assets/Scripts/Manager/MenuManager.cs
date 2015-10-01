@@ -115,6 +115,8 @@ public class MenuManager : MonoBehaviour {
         //ChangeItems
         LevelTitle.text = LM_Script.Levels[LevelId].LevelTitle;
 
+		LevelDescription.text = LM_Script.Levels[LevelId].LevelDescription;
+
         BestTime.text = PlayerPrefs.GetFloat("BestTime" + LevelId).ToString("F2");
 
         if (PlayerPrefs.GetFloat("BestTime" + LevelId) == 0)
